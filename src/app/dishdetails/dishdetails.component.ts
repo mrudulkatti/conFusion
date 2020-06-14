@@ -6,12 +6,25 @@ import { DishService } from '../services/dish.service';
 import { switchMap } from 'rxjs/operators';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { dishfeed } from '../shared/dishfeed';
-import { baseURL } from '../shared/baseurl';
+import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
     selector: 'app-dishdetails',
     templateUrl: './dishdetails.component.html',
-    styleUrls: ['./dishdetails.component.scss']
+    styleUrls: ['./dishdetails.component.scss'],
+    animations: [
+      trigger('visibility', [ 
+      state('shown', style({
+        transform: 'scale(1.0)',
+        opacity: 1
+      })),
+      state('hidden', style({
+        transform: 'scale(0.5)',
+        opacity: 0
+      })),
+      transition('* => *', animate('0.5s ease-in-out'))
+    ])
+  ]
 })
 
 export class DishdetailsComponent implements OnInit {
@@ -25,6 +38,7 @@ export class DishdetailsComponent implements OnInit {
     dishFeedback: FormGroup;
     dishFeed: dishfeed;
     dishcopy: Dish;
+    visibility = 'shown';
 
     @ViewChild('fform') dishFeedbackDirective;
 
@@ -56,7 +70,7 @@ export class DishdetailsComponent implements OnInit {
     createForm(){
       this.dishFeedback = this.fb.group({
         name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(25)]],
-        rating: '',
+        rating: 5,
         comm: ['',  [Validators.required]],
       });
   
@@ -72,8 +86,8 @@ export class DishdetailsComponent implements OnInit {
     .subscribe((dishIds) => this.dishIds = dishIds);
 
     this.route.params
-    .pipe(switchMap((params:Params) => this.dishService.getDish(params['id'])))
-    .subscribe((dish)=>{ this.dish = dish; this.dishcopy = dish; this.setPrevNext(dish.id);},
+    .pipe(switchMap((params:Params) => { this.visibility = 'hidden'; return this.dishService.getDish(params['id']); }))
+    .subscribe((dish)=>{ this.dish = dish; this.dishcopy = dish; this.setPrevNext(dish.id); this.visibility = 'shown';},
      errmess => this.errMess = <any>errmess);
   }
 
